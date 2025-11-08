@@ -1,0 +1,109 @@
+{
+  "description": "Golden Q&A dataset for testing Waste RAG System accuracy",
+  "version": "1.0",
+  "last_updated": "2025-11-08",
+  "qa_pairs": [
+    {
+      "id": 1,
+      "question": "What are the main categories of construction waste?",
+      "expected_keywords": ["concrete", "wood", "metal", "drywall", "cardboard", "hazardous"],
+      "expected_concepts": ["segregation", "recycling", "disposal", "classification"]
+    },
+    {
+      "id": 2,
+      "question": "How should hazardous materials be handled on construction sites?",
+      "expected_keywords": ["safety", "regulations", "disposal", "containers", "labeling", "training"],
+      "expected_concepts": ["compliance", "protection", "protocols", "documentation"]
+    },
+    {
+      "id": 3,
+      "question": "What are the recycling requirements for construction debris?",
+      "expected_keywords": ["recycling", "diversion", "sorting", "materials", "recovery"],
+      "expected_concepts": ["sustainability", "environmental", "requirements", "percentage"]
+    },
+    {
+      "id": 4,
+      "question": "What documentation is required for waste disposal?",
+      "expected_keywords": ["manifests", "records", "tracking", "documentation", "reports"],
+      "expected_concepts": ["compliance", "audit", "requirements", "retention"]
+    },
+    {
+      "id": 5,
+      "question": "How do you properly segregate waste on a construction site?",
+      "expected_keywords": ["containers", "bins", "separation", "types", "labeling"],
+      "expected_concepts": ["organization", "efficiency", "recycling", "contamination"]
+    },
+    {
+      "id": 6,
+      "question": "What are the penalties for improper waste disposal?",
+      "expected_keywords": ["fines", "penalties", "violations", "regulations", "enforcement"],
+      "expected_concepts": ["compliance", "liability", "legal", "consequences"]
+    },
+    {
+      "id": 7,
+      "question": "What safety equipment is required for waste handling?",
+      "expected_keywords": ["PPE", "gloves", "safety", "equipment", "protection"],
+      "expected_concepts": ["hazards", "requirements", "training", "compliance"]
+    },
+    {
+      "id": 8,
+      "question": "How often should waste be removed from construction sites?",
+      "expected_keywords": ["schedule", "frequency", "removal", "collection", "disposal"],
+      "expected_concepts": ["regulations", "safety", "requirements", "management"]
+    },
+    {
+      "id": 9,
+      "question": "What are best practices for reducing construction waste?",
+      "expected_keywords": ["reduction", "planning", "materials", "efficiency", "reuse"],
+      "expected_concepts": ["sustainability", "cost savings", "environmental", "practices"]
+    },
+    {
+      "id": 10,
+      "question": "How should asbestos-containing materials be disposed of?",
+      "expected_keywords": ["asbestos", "hazardous", "licensed", "disposal", "regulations"],
+      "expected_concepts": ["safety", "certification", "compliance", "specialized"]
+    },
+    {
+      "id": 11,
+      "question": "What are the requirements for waste storage containers?",
+      "expected_keywords": ["containers", "bins", "dumpsters", "specifications", "capacity"],
+      "expected_concepts": ["safety", "regulations", "accessibility", "protection"]
+    },
+    {
+      "id": 12,
+      "question": "How do you calculate waste diversion rates?",
+      "expected_keywords": ["calculation", "percentage", "recycled", "total", "diversion"],
+      "expected_concepts": ["metrics", "reporting", "goals", "tracking"]
+    },
+    {
+      "id": 13,
+      "question": "What training is required for waste management personnel?",
+      "expected_keywords": ["training", "certification", "education", "requirements", "personnel"],
+      "expected_concepts": ["compliance", "safety", "procedures", "qualifications"]
+    },
+    {
+      "id": 14,
+      "question": "How should electronic waste from construction be handled?",
+      "expected_keywords": ["electronics", "e-waste", "recycling", "disposal", "special"],
+      "expected_concepts": ["regulations", "certified", "environmental", "recovery"]
+    },
+    {
+      "id": 15,
+      "question": "What are the reporting requirements for construction waste?",
+      "expected_keywords": ["reports", "tracking", "documentation", "requirements", "submission"],
+      "expected_concepts": ["compliance", "deadlines", "records", "authorities"]
+    }
+  ],
+  "evaluation_criteria": {
+    "keyword_accuracy_threshold": 0.6,
+    "concept_coverage_threshold": 0.5,
+    "minimum_answer_length": 50,
+    "response_time_threshold_seconds": 30
+  },
+  "notes": [
+    "Questions are based on common construction/development waste management scenarios",
+    "Expected keywords and concepts are not exhaustive - answers may be valid with different terminology",
+    "Accuracy thresholds are guidelines - contextual relevance is more important than exact keyword matching",
+    "Update this dataset as new regulations and best practices emerge"
+  ]
+}

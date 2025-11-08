@@ -1,0 +1,37 @@
+{
+  "file_sources": [
+    {
+      "name": "construction_development",
+      "type": "directory",
+      "path": "C:/Users/richard.bates/Greystar/AdvSol-Advantage Waste - Working Folders/Strategy/SOP_AWS buildout/Construction_Development",
+      "recursive": true,
+      "extensions": [".pdf", ".txt", ".html", ".md", ".csv"],
+      "metadata": {
+        "department": "construction_development",
+        "priority": "high"
+      }
+    },
+    {
+      "name": "local_documents",
+      "type": "directory",
+      "path": "./waste_documents",
+      "recursive": true,
+      "extensions": [".pdf", ".txt", ".html", ".md", ".csv"]
+    }
+  ],
+  "supported_extensions": [
+    ".pdf", ".txt", ".html", ".css", ".js", ".py",
+    ".csv", ".json", ".xml", ".md", ".rtf"
+  ],
+  "chunking": {
+    "max_tokens_per_chunk": 400,
+    "max_overlap_tokens": 40
+  },
+  "store_name": "advantage-waste-docs",
+  "model": "gemini-2.5-pro",
+  "processing": {
+    "batch_size": 10,
+    "retry_attempts": 3,
+    "delay_between_batches": 1
+  }
+}
