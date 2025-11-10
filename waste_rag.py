@@ -150,7 +150,13 @@ If you're unsure about specific regulations or procedures, clearly state the lim
             # Get uploaded files
             uploaded_files = self.file_search_store.get('files', [])
 
-            # Create model with system instruction and files
+            # Limit files to avoid API limits (max 20 files per request for gemini-2.0-flash-exp)
+            # For large document sets, this samples a subset.
+            # Future enhancement: implement semantic search to select relevant files
+            max_files_per_query = 20
+            files_to_use = uploaded_files[:max_files_per_query] if len(uploaded_files) > max_files_per_query else uploaded_files
+
+            # Create model with system instruction
             model = self.client.GenerativeModel(
                 model_name=self.model_name,
                 system_instruction=self.system_prompt
@@ -159,9 +165,9 @@ If you're unsure about specific regulations or procedures, clearly state the lim
             # Create prompt with context
             prompt_parts = [question]
 
-            # Add files as context if available
-            if uploaded_files:
-                prompt_parts.extend(uploaded_files)
+            # Add limited files as context if available
+            if files_to_use:
+                prompt_parts.extend(files_to_use)
 
             response = model.generate_content(prompt_parts)
 
