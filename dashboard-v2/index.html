@@ -3,142 +3,293 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Email Warehouse Dashboard</title>
+    <title>Email Warehouse Dashboard | RAG Intelligence</title>
     <link rel="stylesheet" href="styles.css">
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
 </head>
 <body>
-    <div class="container">
-        <!-- Header -->
-        <header class="header">
-            <div class="header-content">
-                <h1>📧 Email Warehouse Dashboard</h1>
-                <div class="header-stats">
-                    <div class="stat-card">
-                        <span class="stat-value" id="totalEmails">-</span>
-                        <span class="stat-label">Total Emails</span>
-                    </div>
-                    <div class="stat-card">
-                        <span class="stat-value" id="dateRange">-</span>
-                        <span class="stat-label">Date Range</span>
-                    </div>
-                    <div class="stat-card">
-                        <span class="stat-value" id="uniqueVendors">-</span>
-                        <span class="stat-label">Vendors</span>
-                    </div>
+    <!-- Header -->
+    <header>
+        <div class="header-content">
+            <h1><span class="icon">📧</span> Email Warehouse</h1>
+            <div class="header-stats">
+                <div class="stat">
+                    <div class="stat-value" id="totalEmails">0</div>
+                    <div class="stat-label">Total Emails</div>
+                </div>
+                <div class="stat">
+                    <div class="stat-value" id="dateRange">-</div>
+                    <div class="stat-label">Date Range</div>
+                </div>
+                <div class="stat">
+                    <div class="stat-value" id="uniqueSenders">0</div>
+                    <div class="stat-label">Contacts</div>
                 </div>
             </div>
-        </header>
+        </div>
+    </header>
 
-        <!-- Navigation -->
-        <nav class="nav">
-            <button class="nav-btn active" data-view="overview">📊 Overview</button>
-            <button class="nav-btn" data-view="vendors">🏢 Vendors</button>
-            <button class="nav-btn" data-view="properties">🏠 Properties</button>
-            <button class="nav-btn" data-view="timeline">📅 Timeline</button>
-            <button class="nav-btn" data-view="search">🔍 Search</button>
-        </nav>
+    <!-- Navigation -->
+    <nav>
+        <div class="nav-content">
+            <button class="nav-btn active" data-view="overview">Overview</button>
+            <button class="nav-btn" data-view="analytics">Analytics</button>
+            <button class="nav-btn" data-view="rag">AI Query</button>
+            <button class="nav-btn" data-view="search">Search</button>
+            <button class="nav-btn" data-view="timeline">Timeline</button>
+        </div>
+    </nav>
 
-        <!-- Main Content -->
-        <main class="main-content">
-            <!-- Overview View -->
-            <div id="view-overview" class="view active">
-                <div class="grid-2">
-                    <div class="card">
-                        <h2>📈 Email Volume Over Time</h2>
+    <!-- Main Content -->
+    <main>
+        <!-- Overview View -->
+        <div id="view-overview" class="view">
+            <!-- Stats Grid -->
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <div class="stat-card-value" id="stat-total">1,182</div>
+                    <div class="stat-card-label">Total Emails</div>
+                    <div class="stat-card-change positive">↑ 3.2% this week</div>
+                </div>
+                <div class="stat-card secondary">
+                    <div class="stat-card-value" id="stat-received">742</div>
+                    <div class="stat-card-label">Received</div>
+                    <div class="stat-card-change positive">↑ 2.8% this week</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-card-value" id="stat-sent">440</div>
+                    <div class="stat-card-label">Sent</div>
+                    <div class="stat-card-change positive">↑ 4.1% this week</div>
+                </div>
+                <div class="stat-card warning">
+                    <div class="stat-card-value" id="stat-threads">215</div>
+                    <div class="stat-card-label">Active Threads</div>
+                    <div class="stat-card-change negative">↓ 1.5% this week</div>
+                </div>
+            </div>
+
+            <!-- Charts -->
+            <div class="grid grid-2">
+                <div class="card">
+                    <div class="card-header">
+                        <h2 class="card-title">Email Volume Over Time</h2>
+                    </div>
+                    <div class="chart-container">
                         <canvas id="volumeChart"></canvas>
                     </div>
-                    <div class="card">
-                        <h2>📊 Email Type Distribution</h2>
+                </div>
+                <div class="card">
+                    <div class="card-header">
+                        <h2 class="card-title">Email Type Distribution</h2>
+                    </div>
+                    <div class="chart-container">
                         <canvas id="typeChart"></canvas>
                     </div>
                 </div>
-                <div class="grid-2">
-                    <div class="card">
-                        <h2>🔝 Top Senders</h2>
-                        <div id="topSenders" class="list"></div>
+            </div>
+
+            <!-- Recent Activity -->
+            <div class="card">
+                <div class="card-header">
+                    <h2 class="card-title">Recent Emails</h2>
+                    <div class="card-actions">
+                        <button class="btn btn-secondary btn-sm" id="refreshBtn">Refresh</button>
                     </div>
-                    <div class="card">
-                        <h2>🎯 Top Recipients</h2>
-                        <div id="topRecipients" class="list"></div>
+                </div>
+                <div id="recentEmails" class="email-list"></div>
+            </div>
+        </div>
+
+        <!-- Analytics View -->
+        <div id="view-analytics" class="view hidden">
+            <div class="grid grid-2">
+                <div class="card">
+                    <div class="card-header">
+                        <h2 class="card-title">Top Senders</h2>
+                    </div>
+                    <table class="table">
+                        <thead>
+                            <tr>
+                                <th>Sender</th>
+                                <th>Emails</th>
+                                <th>%</th>
+                            </tr>
+                        </thead>
+                        <tbody id="topSendersTable"></tbody>
+                    </table>
+                </div>
+                <div class="card">
+                    <div class="card-header">
+                        <h2 class="card-title">Top Recipients</h2>
+                    </div>
+                    <table class="table">
+                        <thead>
+                            <tr>
+                                <th>Recipient</th>
+                                <th>Emails</th>
+                                <th>%</th>
+                            </tr>
+                        </thead>
+                        <tbody id="topRecipientsTable"></tbody>
+                    </table>
+                </div>
+            </div>
+
+            <div class="card">
+                <div class="card-header">
+                    <h2 class="card-title">Vendor Analysis</h2>
+                </div>
+                <div id="vendorAnalysis">
+                    <div class="loading">Loading vendor data...</div>
+                </div>
+            </div>
+
+            <div class="card">
+                <div class="card-header">
+                    <h2 class="card-title">Property Communications</h2>
+                </div>
+                <div id="propertyAnalysis">
+                    <div class="loading">Loading property data...</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- RAG Query View -->
+        <div id="view-rag" class="view hidden">
+            <div class="rag-query">
+                <h3>🤖 Ask Your Email Knowledge Base</h3>
+                <p style="margin-bottom: 1rem; opacity: 0.9;">Query your email history using natural language. Powered by Gemini RAG.</p>
+                <div class="rag-input-group">
+                    <input
+                        type="text"
+                        id="ragQueryInput"
+                        class="rag-input"
+                        placeholder="e.g., What contamination issues have we dealt with?"
+                    >
+                    <button class="btn btn-secondary" id="ragQueryBtn">Ask AI</button>
+                </div>
+                <div id="ragResults" class="rag-results hidden">
+                    <div id="ragAnswer"></div>
+                </div>
+                <div id="ragLoading" class="rag-loading hidden">
+                    <div class="spinner"></div>
+                    <p style="margin-top: 1rem;">Searching 1,182 emails...</p>
+                </div>
+            </div>
+
+            <!-- Example Questions -->
+            <div class="card">
+                <div class="card-header">
+                    <h2 class="card-title">Example Questions</h2>
+                </div>
+                <div class="grid grid-3">
+                    <button class="btn btn-secondary example-question">What vendors do I communicate with most?</button>
+                    <button class="btn btn-secondary example-question">What contamination issues have been reported?</button>
+                    <button class="btn btn-secondary example-question">Show me all emails about Jones Grant property</button>
+                    <button class="btn btn-secondary example-question">What are common invoice disputes?</button>
+                    <button class="btn btn-secondary example-question">How did we resolve Republic Services issues?</button>
+                    <button class="btn btn-secondary example-question">What's our history with Waste Management?</button>
+                </div>
+            </div>
+
+            <!-- Query History -->
+            <div class="card">
+                <div class="card-header">
+                    <h2 class="card-title">Recent Queries</h2>
+                </div>
+                <div id="queryHistory" class="timeline">
+                    <div class="loading">No queries yet</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Search View -->
+        <div id="view-search" class="view hidden">
+            <div class="search-section">
+                <div class="search-bar">
+                    <input
+                        type="text"
+                        id="searchInput"
+                        class="search-input"
+                        placeholder="Search emails by subject, sender, content..."
+                    >
+                    <button class="btn btn-primary" id="searchBtn">Search</button>
+                </div>
+                <div class="filters">
+                    <div class="filter-group">
+                        <label class="filter-label">Date Range</label>
+                        <select id="searchDateRange" class="filter-select">
+                            <option value="all">All Time</option>
+                            <option value="7">Last 7 days</option>
+                            <option value="30">Last 30 days</option>
+                            <option value="90">Last 90 days</option>
+                        </select>
+                    </div>
+                    <div class="filter-group">
+                        <label class="filter-label">Type</label>
+                        <select id="searchType" class="filter-select">
+                            <option value="all">All Types</option>
+                            <option value="received">Received</option>
+                            <option value="sent">Sent</option>
+                        </select>
+                    </div>
+                    <div class="filter-group">
+                        <label class="filter-label">Sender</label>
+                        <select id="searchSender" class="filter-select">
+                            <option value="all">All Senders</option>
+                        </select>
                     </div>
                 </div>
             </div>
 
-            <!-- Vendors View -->
-            <div id="view-vendors" class="view">
-                <div class="card">
-                    <h2>🏢 Vendor Communications</h2>
-                    <div class="search-box">
-                        <input type="text" id="vendorSearch" placeholder="Search vendors...">
-                    </div>
-                    <div id="vendorList" class="vendor-grid"></div>
+            <div class="card">
+                <div class="card-header">
+                    <h2 class="card-title">Search Results</h2>
+                    <div id="searchCount" class="stat-label"></div>
+                </div>
+                <div id="searchResults" class="email-list">
+                    <div class="loading">Enter a search query to begin</div>
                 </div>
             </div>
+        </div>
 
-            <!-- Properties View -->
-            <div id="view-properties" class="view">
-                <div class="card">
-                    <h2>🏠 Property Communications</h2>
-                    <div class="search-box">
-                        <input type="text" id="propertySearch" placeholder="Search properties...">
-                    </div>
-                    <div id="propertyList" class="property-grid"></div>
-                </div>
-            </div>
-
-            <!-- Timeline View -->
-            <div id="view-timeline" class="view">
-                <div class="card">
-                    <h2>📅 Email Timeline</h2>
-                    <div class="timeline-controls">
-                        <select id="timelineGranularity">
+        <!-- Timeline View -->
+        <div id="view-timeline" class="view hidden">
+            <div class="card">
+                <div class="card-header">
+                    <h2 class="card-title">Email Timeline</h2>
+                    <div class="card-actions">
+                        <select id="timelineGranularity" class="filter-select">
                             <option value="day">Daily</option>
                             <option value="week" selected>Weekly</option>
                             <option value="month">Monthly</option>
                         </select>
                     </div>
+                </div>
+                <div class="chart-container" style="height: 400px;">
                     <canvas id="timelineChart"></canvas>
                 </div>
             </div>
 
-            <!-- Search View -->
-            <div id="view-search" class="view">
-                <div class="card">
-                    <h2>🔍 Search Emails</h2>
-                    <div class="search-form">
-                        <input type="text" id="searchQuery" placeholder="Search subject, body, sender...">
-                        <div class="search-filters">
-                            <select id="searchDateRange">
-                                <option value="all">All Time</option>
-                                <option value="7">Last 7 days</option>
-                                <option value="30">Last 30 days</option>
-                                <option value="90">Last 90 days</option>
-                            </select>
-                            <select id="searchType">
-                                <option value="all">All Types</option>
-                                <option value="received">Received</option>
-                                <option value="sent">Sent</option>
-                            </select>
-                            <button id="searchBtn" class="btn-primary">Search</button>
-                        </div>
-                    </div>
-                    <div id="searchResults" class="search-results"></div>
+            <div class="card">
+                <div class="card-header">
+                    <h2 class="card-title">Activity by Day of Week</h2>
+                </div>
+                <div class="chart-container">
+                    <canvas id="dayOfWeekChart"></canvas>
                 </div>
             </div>
-        </main>
-
-        <!-- Footer -->
-        <footer class="footer">
-            <p>Email Warehouse Dashboard v2.0 | Powered by Gemini RAG | <span id="lastUpdated">-</span></p>
-        </footer>
-    </div>
+        </div>
+    </main>
 
     <!-- Email Detail Modal -->
     <div id="emailModal" class="modal">
         <div class="modal-content">
-            <span class="modal-close">&times;</span>
-            <div id="emailDetail"></div>
+            <div class="modal-header">
+                <h3 class="modal-title">Email Details</h3>
+                <button class="modal-close" id="closeModal">×</button>
+            </div>
+            <div class="modal-body" id="emailDetail"></div>
         </div>
     </div>
 
