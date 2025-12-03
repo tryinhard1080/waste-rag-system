@@ -27,7 +27,7 @@ GEMINI_DIR = SCRIPT_DIR.parent / "warehouse" / "gemini"
 CONFIG_FILE = SCRIPT_DIR.parent / "config" / "gemini_config.json"
 
 # Configuration
-MODEL_NAME = "gemini-2.0-flash-exp"  # Using latest experimental model
+MODEL_NAME = "gemini-1.5-flash"  # Using stable model with better quota limits
 
 
 class GeminiRAGManager:
@@ -185,7 +185,11 @@ class GeminiRAGManager:
 
             if not relevant_chunks:
                 print("No relevant emails found.")
-                return
+                return {
+                    'answer': "No relevant emails found for this query.",
+                    'chunks_found': 0,
+                    'question': question
+                }
 
             print(f"Found {len(relevant_chunks)} relevant email sections")
             print()
@@ -218,11 +222,23 @@ Please provide a comprehensive answer based on the emails above."""
             print(response.text)
             print()
 
+            # Return structured data for API use
+            return {
+                'answer': response.text,
+                'chunks_found': len(relevant_chunks),
+                'question': question
+            }
+
         except Exception as e:
             print(f"ERROR: {e}")
             import traceback
             traceback.print_exc()
-            sys.exit(1)
+            return {
+                'answer': f"Error: {str(e)}",
+                'chunks_found': 0,
+                'question': question,
+                'error': str(e)
+            }
 
     def _search_markdown_files(self, query: str, max_chunks: int = 10):
         """

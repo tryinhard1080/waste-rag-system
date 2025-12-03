@@ -2,8 +2,10 @@
 
 # Sensitive Data - DO NOT COMMIT
 warehouse/daily/*.json
+warehouse/gemini/*.md
 logs/*.log
 config/settings.json
+config/gemini_config.json
 
 # Keep directories but not contents
 !warehouse/daily/.gitkeep

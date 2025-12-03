@@ -12,9 +12,10 @@ class EmailWarehouseDashboard {
 
         // Configuration
         this.config = {
-            warehousePath: '../warehouse/daily',
+            warehousePath: 'warehouse/daily',  // Server runs from project root
             apiKey: null,
-            ragEnabled: false
+            ragEnabled: true,
+            ragApiUrl: 'http://localhost:5000/api'
         };
 
         this.init();
@@ -549,15 +550,47 @@ class EmailWarehouseDashboard {
         resultsEl.classList.add('hidden');
 
         try {
-            // Note: This requires Python backend or direct API call
-            // For demo, we'll show a simulated response
-            await this.simulateRAGQuery(query, answerEl);
+            // Call the Flask backend API
+            const response = await fetch(`${this.config.ragApiUrl}/query`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    question: query,
+                    max_chunks: 10
+                })
+            });
+
+            if (!response.ok) {
+                throw new Error(`API returned ${response.status}: ${response.statusText}`);
+            }
+
+            const data = await response.json();
+
+            if (data.status === 'error') {
+                throw new Error(data.error);
+            }
+
+            // Display the answer
+            answerEl.innerHTML = `
+                <div class="success">
+                    <strong>Question:</strong> ${this.escapeHtml(query)}
+                    <div style="margin-top: 1rem; padding: 1rem; background: #f0f9ff; border-left: 4px solid #2563eb; border-radius: 0.25rem;">
+                        ${this.formatAnswer(data.answer)}
+                    </div>
+                    <div style="margin-top: 0.5rem; font-size: 0.875rem; color: #6b7280;">
+                        Found ${data.chunks_found} relevant email sections
+                    </div>
+                </div>
+            `;
 
             // Add to history
             this.queryHistory.unshift({
                 query,
                 timestamp: new Date(),
-                answered: true
+                answered: true,
+                answer: data.answer
             });
 
             loadingEl.classList.add('hidden');
@@ -567,34 +600,29 @@ class EmailWarehouseDashboard {
 
         } catch (error) {
             console.error('RAG query failed:', error);
-            answerEl.innerHTML = `<div class="error">Failed to query RAG system. Error: ${error.message}</div>`;
+            answerEl.innerHTML = `
+                <div class="error" style="padding: 1rem; background: #fef2f2; border-left: 4px solid #ef4444; border-radius: 0.25rem;">
+                    <strong>Error:</strong> ${this.escapeHtml(error.message)}
+                    <p style="margin-top: 0.5rem; font-size: 0.875rem;">
+                        Make sure the Flask API server is running:
+                    </p>
+                    <pre style="background: #1f2937; color: #f9fafb; padding: 0.5rem; border-radius: 0.25rem; margin-top: 0.5rem; font-size: 0.75rem;">cd api
+python rag_api.py</pre>
+                </div>
+            `;
             loadingEl.classList.add('hidden');
             resultsEl.classList.remove('hidden');
         }
     }
 
-    async simulateRAGQuery(query, answerEl) {
-        // Simulate API call delay
-        await new Promise(resolve => setTimeout(resolve, 2000));
-
-        // Show instruction for real integration
-        answerEl.innerHTML = `
-            <div class="success">
-                <strong>RAG Query:</strong> "${query}"
-                <p style="margin-top: 1rem;">
-                    <strong>To enable live RAG queries:</strong>
-                </p>
-                <ol style="margin-left: 1.5rem; margin-top: 0.5rem;">
-                    <li>Set your Gemini API key in the dashboard settings</li>
-                    <li>Or query via command line:
-                        <pre style="background: #f3f4f6; padding: 0.5rem; border-radius: 0.25rem; margin-top: 0.5rem;">python ../scripts/setup_gemini_rag.py --query "${query}"</pre>
-                    </li>
-                </ol>
-                <p style="margin-top: 1rem;">
-                    For now, use the command line interface in <code>scripts/setup_gemini_rag.py</code> to query your email knowledge base.
-                </p>
-            </div>
-        `;
+    formatAnswer(answer) {
+        // Convert markdown-style formatting to HTML
+        return answer
+            .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
+            .replace(/\*(.*?)\*/g, '<em>$1</em>')
+            .replace(/\n\n/g, '</p><p style="margin-top: 0.75rem;">')
+            .replace(/\n/g, '<br>')
+            .replace(/^(.*)$/, '<p>$1</p>');
     }
 
     updateQueryHistory() {
