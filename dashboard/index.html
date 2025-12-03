@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Email Warehouse Dashboard</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div class="container">
+        <!-- Header -->
+        <header class="header">
+            <h1>Email Warehouse Dashboard</h1>
+            <div class="header-controls">
+                <select id="dateSelector" class="date-selector">
+                    <option value="">Select Date...</option>
+                </select>
+                <input type="text" id="searchBox" class="search-box" placeholder="Search emails...">
+            </div>
+        </header>
+
+        <!-- Navigation Tabs -->
+        <nav class="tabs">
+            <button class="tab-button active" data-view="daily">Daily View</button>
+            <button class="tab-button" data-view="projects">Projects</button>
+            <button class="tab-button" data-view="contacts">Contacts</button>
+            <button class="tab-button" data-view="threads">Threads</button>
+            <button class="tab-button" data-view="search">Search</button>
+        </nav>
+
+        <!-- Main Content Area -->
+        <main class="main-content">
+            <!-- Daily View -->
+            <div id="dailyView" class="view active">
+                <div class="stats-panel">
+                    <div class="stat-card">
+                        <div class="stat-value" id="receivedCount">0</div>
+                        <div class="stat-label">Received</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-value" id="sentCount">0</div>
+                        <div class="stat-label">Sent</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-value" id="threadCount">0</div>
+                        <div class="stat-label">Threads</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-value" id="attachmentCount">0</div>
+                        <div class="stat-label">Attachments</div>
+                    </div>
+                </div>
+
+                <div class="filters">
+                    <button class="filter-btn" data-filter="all">All</button>
+                    <button class="filter-btn" data-filter="received">Received</button>
+                    <button class="filter-btn" data-filter="sent">Sent</button>
+                    <button class="filter-btn" data-filter="high">High Priority</button>
+                    <button class="filter-btn" data-filter="attachments">Has Attachments</button>
+                </div>
+
+                <div id="emailList" class="email-list"></div>
+            </div>
+
+            <!-- Projects View -->
+            <div id="projectsView" class="view">
+                <h2>Projects and Properties</h2>
+                <div id="projectsList" class="projects-list"></div>
+            </div>
+
+            <!-- Contacts View -->
+            <div id="contactsView" class="view">
+                <h2>Communication by Contact</h2>
+                <div id="contactsList" class="contacts-list"></div>
+            </div>
+
+            <!-- Threads View -->
+            <div id="threadsView" class="view">
+                <h2>Conversation Threads</h2>
+                <div class="filters">
+                    <button class="filter-btn" data-filter="active">Active</button>
+                    <button class="filter-btn" data-filter="recent">Recent</button>
+                    <button class="filter-btn" data-filter="aging">Aging</button>
+                    <button class="filter-btn" data-filter="stale">Stale</button>
+                </div>
+                <div id="threadsList" class="threads-list"></div>
+            </div>
+
+            <!-- Search View -->
+            <div id="searchView" class="view">
+                <h2>Search Results</h2>
+                <div id="searchResults" class="search-results"></div>
+            </div>
+        </main>
+
+        <!-- Email Detail Modal -->
+        <div id="emailModal" class="modal">
+            <div class="modal-content">
+                <span class="close">&times;</span>
+                <div id="emailDetail"></div>
+            </div>
+        </div>
+
+        <!-- Thread Detail Modal -->
+        <div id="threadModal" class="modal">
+            <div class="modal-content">
+                <span class="close">&times;</span>
+                <div id="threadDetail"></div>
+            </div>
+        </div>
+    </div>
+
+    <script src="app.js"></script>
+</body>
+</html>

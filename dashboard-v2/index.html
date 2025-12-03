@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Email Warehouse Dashboard</title>
+    <link rel="stylesheet" href="styles.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+</head>
+<body>
+    <div class="container">
+        <!-- Header -->
+        <header class="header">
+            <div class="header-content">
+                <h1>📧 Email Warehouse Dashboard</h1>
+                <div class="header-stats">
+                    <div class="stat-card">
+                        <span class="stat-value" id="totalEmails">-</span>
+                        <span class="stat-label">Total Emails</span>
+                    </div>
+                    <div class="stat-card">
+                        <span class="stat-value" id="dateRange">-</span>
+                        <span class="stat-label">Date Range</span>
+                    </div>
+                    <div class="stat-card">
+                        <span class="stat-value" id="uniqueVendors">-</span>
+                        <span class="stat-label">Vendors</span>
+                    </div>
+                </div>
+            </div>
+        </header>
+
+        <!-- Navigation -->
+        <nav class="nav">
+            <button class="nav-btn active" data-view="overview">📊 Overview</button>
+            <button class="nav-btn" data-view="vendors">🏢 Vendors</button>
+            <button class="nav-btn" data-view="properties">🏠 Properties</button>
+            <button class="nav-btn" data-view="timeline">📅 Timeline</button>
+            <button class="nav-btn" data-view="search">🔍 Search</button>
+        </nav>
+
+        <!-- Main Content -->
+        <main class="main-content">
+            <!-- Overview View -->
+            <div id="view-overview" class="view active">
+                <div class="grid-2">
+                    <div class="card">
+                        <h2>📈 Email Volume Over Time</h2>
+                        <canvas id="volumeChart"></canvas>
+                    </div>
+                    <div class="card">
+                        <h2>📊 Email Type Distribution</h2>
+                        <canvas id="typeChart"></canvas>
+                    </div>
+                </div>
+                <div class="grid-2">
+                    <div class="card">
+                        <h2>🔝 Top Senders</h2>
+                        <div id="topSenders" class="list"></div>
+                    </div>
+                    <div class="card">
+                        <h2>🎯 Top Recipients</h2>
+                        <div id="topRecipients" class="list"></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Vendors View -->
+            <div id="view-vendors" class="view">
+                <div class="card">
+                    <h2>🏢 Vendor Communications</h2>
+                    <div class="search-box">
+                        <input type="text" id="vendorSearch" placeholder="Search vendors...">
+                    </div>
+                    <div id="vendorList" class="vendor-grid"></div>
+                </div>
+            </div>
+
+            <!-- Properties View -->
+            <div id="view-properties" class="view">
+                <div class="card">
+                    <h2>🏠 Property Communications</h2>
+                    <div class="search-box">
+                        <input type="text" id="propertySearch" placeholder="Search properties...">
+                    </div>
+                    <div id="propertyList" class="property-grid"></div>
+                </div>
+            </div>
+
+            <!-- Timeline View -->
+            <div id="view-timeline" class="view">
+                <div class="card">
+                    <h2>📅 Email Timeline</h2>
+                    <div class="timeline-controls">
+                        <select id="timelineGranularity">
+                            <option value="day">Daily</option>
+                            <option value="week" selected>Weekly</option>
+                            <option value="month">Monthly</option>
+                        </select>
+                    </div>
+                    <canvas id="timelineChart"></canvas>
+                </div>
+            </div>
+
+            <!-- Search View -->
+            <div id="view-search" class="view">
+                <div class="card">
+                    <h2>🔍 Search Emails</h2>
+                    <div class="search-form">
+                        <input type="text" id="searchQuery" placeholder="Search subject, body, sender...">
+                        <div class="search-filters">
+                            <select id="searchDateRange">
+                                <option value="all">All Time</option>
+                                <option value="7">Last 7 days</option>
+                                <option value="30">Last 30 days</option>
+                                <option value="90">Last 90 days</option>
+                            </select>
+                            <select id="searchType">
+                                <option value="all">All Types</option>
+                                <option value="received">Received</option>
+                                <option value="sent">Sent</option>
+                            </select>
+                            <button id="searchBtn" class="btn-primary">Search</button>
+                        </div>
+                    </div>
+                    <div id="searchResults" class="search-results"></div>
+                </div>
+            </div>
+        </main>
+
+        <!-- Footer -->
+        <footer class="footer">
+            <p>Email Warehouse Dashboard v2.0 | Powered by Gemini RAG | <span id="lastUpdated">-</span></p>
+        </footer>
+    </div>
+
+    <!-- Email Detail Modal -->
+    <div id="emailModal" class="modal">
+        <div class="modal-content">
+            <span class="modal-close">&times;</span>
+            <div id="emailDetail"></div>
+        </div>
+    </div>
+
+    <script src="app.js"></script>
+</body>
+</html>

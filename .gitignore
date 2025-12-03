@@ -1,0 +1,46 @@
+# Email Warehouse - Git Ignore
+
+# Sensitive Data - DO NOT COMMIT
+warehouse/daily/*.json
+logs/*.log
+config/settings.json
+
+# Keep directories but not contents
+!warehouse/daily/.gitkeep
+!warehouse/gemini/.gitkeep
+!logs/.gitkeep
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+env/
+venv/
+*.egg-info/
+.pytest_cache/
+
+# OS Files
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Outlook COM artifacts
+~$*
+
+# Temporary files
+*.tmp
+*.bak
+*.old
+
+# Include these
+!README.md
+!CLAUDE.md
+!.gitignore

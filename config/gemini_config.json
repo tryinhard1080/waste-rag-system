@@ -1,0 +1,72 @@
+{
+  "store_name": "waste-management-emails",
+  "created_at": "2025-12-03T12:31:27.063811",
+  "files": [
+    {
+      "name": "batch_2025-11_001.md",
+      "uri": "https://generativelanguage.googleapis.com/v1beta/files/97eyn32ra1za",
+      "size_mb": 4.76,
+      "uploaded_at": "2025-12-03T12:31:44.891373"
+    },
+    {
+      "name": "batch_2025-12_001.md",
+      "uri": "https://generativelanguage.googleapis.com/v1beta/files/szcb4uwgnce3",
+      "size_mb": 0.29,
+      "uploaded_at": "2025-12-03T12:31:48.124817"
+    },
+    {
+      "name": "batch_all-emails_001.md",
+      "uri": "https://generativelanguage.googleapis.com/v1beta/files/ol3n2qikfgw3",
+      "size_mb": 0.05,
+      "uploaded_at": "2025-12-03T12:31:51.317936"
+    },
+    {
+      "name": "batch_2025-06_001.md",
+      "uri": "https://generativelanguage.googleapis.com/v1beta/files/n0cr6rtuzsa1",
+      "size_mb": 0.74,
+      "uploaded_at": "2025-12-03T14:31:18.796174"
+    },
+    {
+      "name": "batch_2025-07_001.md",
+      "uri": "https://generativelanguage.googleapis.com/v1beta/files/gxcxyryu2q0i",
+      "size_mb": 1.05,
+      "uploaded_at": "2025-12-03T14:31:21.072848"
+    },
+    {
+      "name": "batch_2025-08_001.md",
+      "uri": "https://generativelanguage.googleapis.com/v1beta/files/hfwudz91z250",
+      "size_mb": 1.62,
+      "uploaded_at": "2025-12-03T14:31:23.503520"
+    },
+    {
+      "name": "batch_2025-09_001.md",
+      "uri": "https://generativelanguage.googleapis.com/v1beta/files/vzl9489nfxcp",
+      "size_mb": 6.14,
+      "uploaded_at": "2025-12-03T14:31:27.724005"
+    },
+    {
+      "name": "batch_2025-10_001.md",
+      "uri": "https://generativelanguage.googleapis.com/v1beta/files/7304kbzipbyy",
+      "size_mb": 4.91,
+      "uploaded_at": "2025-12-03T14:31:31.833314"
+    },
+    {
+      "name": "batch_2025-11_001.md",
+      "uri": "https://generativelanguage.googleapis.com/v1beta/files/7wr23y27au65",
+      "size_mb": 4.76,
+      "uploaded_at": "2025-12-03T14:31:35.608813"
+    },
+    {
+      "name": "batch_2025-12_001.md",
+      "uri": "https://generativelanguage.googleapis.com/v1beta/files/ril48xxph8rp",
+      "size_mb": 0.29,
+      "uploaded_at": "2025-12-03T14:31:38.043437"
+    },
+    {
+      "name": "batch_all-emails_001.md",
+      "uri": "https://generativelanguage.googleapis.com/v1beta/files/ltfgxspamzv8",
+      "size_mb": 0.05,
+      "uploaded_at": "2025-12-03T14:31:39.962828"
+    }
+  ]
+}
