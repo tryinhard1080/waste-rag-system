@@ -1,0 +1,12 @@
+{
+  "mcpServers": {
+    "waste-master-brain": {
+      "command": "python",
+      "args": ["C:/Users/Richard/Documents/Waste Rag Master Brain/waste-rag-system/mcp-server/server.py"],
+      "env": {
+        "GOOGLE_API_KEY": "AIzaSyAO8hpREfchaD1uVd9zJw4uWHKswR5c-h0",
+        "DB_PATH": "C:/Users/Richard/Documents/Waste Rag Master Brain/waste-rag-system/data/wastewise.db"
+      }
+    }
+  }
+}

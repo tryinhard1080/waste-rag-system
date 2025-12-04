@@ -33,6 +33,7 @@
     <nav>
         <div class="nav-content">
             <button class="nav-btn active" data-view="overview">Overview</button>
+            <button class="nav-btn" data-view="kpis">KPIs</button>
             <button class="nav-btn" data-view="analytics">Analytics</button>
             <button class="nav-btn" data-view="rag">AI Query</button>
             <button class="nav-btn" data-view="search">Search</button>
@@ -97,6 +98,99 @@
                     </div>
                 </div>
                 <div id="recentEmails" class="email-list"></div>
+            </div>
+        </div>
+
+        <!-- KPIs View -->
+        <div id="view-kpis" class="view hidden">
+            <!-- KPI Stats Grid -->
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <div class="stat-card-value" id="kpi-cpd">$-</div>
+                    <div class="stat-card-label">Avg Cost/Door</div>
+                    <div class="stat-card-change" id="kpi-cpd-trend">-</div>
+                </div>
+                <div class="stat-card secondary">
+                    <div class="stat-card-value" id="kpi-ypd">-</div>
+                    <div class="stat-card-label">Avg Yards/Door</div>
+                    <div class="stat-card-change" id="kpi-ypd-trend">-</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-card-value" id="kpi-properties">-</div>
+                    <div class="stat-card-label">Properties</div>
+                    <div class="stat-card-change">Tracked</div>
+                </div>
+                <div class="stat-card warning">
+                    <div class="stat-card-value" id="kpi-rates">-</div>
+                    <div class="stat-card-label">Rate Records</div>
+                    <div class="stat-card-change">In Database</div>
+                </div>
+            </div>
+
+            <!-- Rate Benchmarks -->
+            <div class="card">
+                <div class="card-header">
+                    <h2 class="card-title">Rate Benchmarks</h2>
+                    <div class="card-actions">
+                        <select id="benchmarkVendor" class="filter-select">
+                            <option value="">All Vendors</option>
+                            <option value="WM">Waste Management</option>
+                            <option value="Republic">Republic Services</option>
+                            <option value="Waste Connections">Waste Connections</option>
+                        </select>
+                        <select id="benchmarkService" class="filter-select">
+                            <option value="compactor">Compactor</option>
+                            <option value="dumpster">Dumpster</option>
+                            <option value="recycling">Recycling</option>
+                        </select>
+                        <button class="btn btn-secondary btn-sm" id="refreshBenchmarks">Refresh</button>
+                    </div>
+                </div>
+                <div id="rateBenchmarks" class="benchmarks-grid">
+                    <div class="loading">Loading rate benchmarks...</div>
+                </div>
+            </div>
+
+            <!-- Charts -->
+            <div class="grid grid-2">
+                <div class="card">
+                    <div class="card-header">
+                        <h2 class="card-title">Cost/Door Trend</h2>
+                    </div>
+                    <div class="chart-container">
+                        <canvas id="cpdChart"></canvas>
+                    </div>
+                </div>
+                <div class="card">
+                    <div class="card-header">
+                        <h2 class="card-title">Rate Pricing Trends</h2>
+                    </div>
+                    <div class="chart-container">
+                        <canvas id="rateChart"></canvas>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Property KPIs Table -->
+            <div class="card">
+                <div class="card-header">
+                    <h2 class="card-title">Property KPIs</h2>
+                </div>
+                <table class="table">
+                    <thead>
+                        <tr>
+                            <th>Property</th>
+                            <th>Type</th>
+                            <th>Units</th>
+                            <th>Cost/Door</th>
+                            <th>Yards/Door</th>
+                            <th>Total Cost</th>
+                        </tr>
+                    </thead>
+                    <tbody id="propertyKPITable">
+                        <tr><td colspan="6" class="loading">Loading property data...</td></tr>
+                    </tbody>
+                </table>
             </div>
         </div>
 

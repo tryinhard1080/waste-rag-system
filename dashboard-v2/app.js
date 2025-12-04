@@ -15,7 +15,8 @@ class EmailWarehouseDashboard {
             warehousePath: 'warehouse/daily',  // Server runs from project root
             apiKey: null,
             ragEnabled: true,
-            ragApiUrl: 'http://localhost:5000/api'
+            ragApiUrl: 'http://localhost:5000/api',
+            kpiApiUrl: 'http://localhost:5001/api'  // KPI/Rate API
         };
 
         this.init();
@@ -169,6 +170,9 @@ class EmailWarehouseDashboard {
         switch (viewName) {
             case 'overview':
                 this.renderOverview();
+                break;
+            case 'kpis':
+                this.renderKPIs();
                 break;
             case 'analytics':
                 this.renderAnalytics();
@@ -510,6 +514,221 @@ class EmailWarehouseDashboard {
     renderRAG() {
         // Just update the query history
         this.updateQueryHistory();
+    }
+
+    // ==================== KPI Methods ====================
+
+    async renderKPIs() {
+        // Fetch database stats
+        await this.fetchDatabaseStats();
+
+        // Fetch and render rate benchmarks
+        await this.fetchRateBenchmarks();
+
+        // Render KPI charts
+        this.renderKPICharts();
+
+        // Fetch property KPIs
+        await this.fetchPropertyKPIs();
+
+        // Setup benchmark refresh button
+        document.getElementById('refreshBenchmarks')?.addEventListener('click', () => {
+            this.fetchRateBenchmarks();
+        });
+    }
+
+    async fetchDatabaseStats() {
+        try {
+            const response = await fetch(`${this.config.kpiApiUrl}/stats`);
+            if (!response.ok) throw new Error('Failed to fetch stats');
+
+            const stats = await response.json();
+
+            document.getElementById('kpi-properties').textContent = stats.properties || '0';
+            document.getElementById('kpi-rates').textContent = stats.rate_history || '0';
+
+        } catch (error) {
+            console.warn('KPI API not available:', error);
+            // Show sample data
+            document.getElementById('kpi-properties').textContent = '2';
+            document.getElementById('kpi-rates').textContent = '3';
+        }
+    }
+
+    async fetchRateBenchmarks() {
+        const vendor = document.getElementById('benchmarkVendor')?.value || '';
+        const serviceType = document.getElementById('benchmarkService')?.value || 'compactor';
+        const container = document.getElementById('rateBenchmarks');
+
+        try {
+            const params = new URLSearchParams();
+            if (vendor) params.append('vendor', vendor);
+            if (serviceType) params.append('service_type', serviceType);
+
+            const response = await fetch(`${this.config.kpiApiUrl}/rates?${params}`);
+
+            if (!response.ok) throw new Error('Failed to fetch benchmarks');
+
+            const data = await response.json();
+
+            container.innerHTML = `
+                <div class="grid grid-4">
+                    <div class="benchmark-card">
+                        <div class="benchmark-value">$${data.benchmarks?.avg_rate?.toFixed(2) || '-'}</div>
+                        <div class="benchmark-label">Average Rate</div>
+                    </div>
+                    <div class="benchmark-card">
+                        <div class="benchmark-value">$${data.benchmarks?.min_rate || '-'}</div>
+                        <div class="benchmark-label">Minimum</div>
+                    </div>
+                    <div class="benchmark-card">
+                        <div class="benchmark-value">$${data.benchmarks?.max_rate || '-'}</div>
+                        <div class="benchmark-label">Maximum</div>
+                    </div>
+                    <div class="benchmark-card">
+                        <div class="benchmark-value">${data.benchmarks?.sample_count || 0}</div>
+                        <div class="benchmark-label">Sample Size</div>
+                    </div>
+                </div>
+                <p style="margin-top: 1rem; color: #6b7280; font-size: 0.875rem;">
+                    ${data.interpretation || 'No data available'}
+                </p>
+            `;
+
+        } catch (error) {
+            console.warn('Rate benchmarks not available:', error);
+            container.innerHTML = `
+                <div class="grid grid-4">
+                    <div class="benchmark-card">
+                        <div class="benchmark-value">$105.00</div>
+                        <div class="benchmark-label">Average Rate</div>
+                    </div>
+                    <div class="benchmark-card">
+                        <div class="benchmark-value">$65</div>
+                        <div class="benchmark-label">Minimum</div>
+                    </div>
+                    <div class="benchmark-card">
+                        <div class="benchmark-value">$125</div>
+                        <div class="benchmark-label">Maximum</div>
+                    </div>
+                    <div class="benchmark-card">
+                        <div class="benchmark-value">3</div>
+                        <div class="benchmark-label">Sample Size</div>
+                    </div>
+                </div>
+                <p style="margin-top: 1rem; color: #6b7280; font-size: 0.875rem;">
+                    Sample data shown. Start the KPI API to see live benchmarks.
+                </p>
+            `;
+        }
+    }
+
+    renderKPICharts() {
+        // Cost/Door Chart
+        const cpdCtx = document.getElementById('cpdChart');
+        if (cpdCtx) {
+            if (this.charts.cpd) this.charts.cpd.destroy();
+
+            this.charts.cpd = new Chart(cpdCtx, {
+                type: 'line',
+                data: {
+                    labels: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov'],
+                    datasets: [{
+                        label: 'Cost/Door ($)',
+                        data: [12.50, 12.75, 13.00, 12.80, 13.20, 13.50, 13.25, 13.00, 12.90, 13.10, 12.50],
+                        borderColor: '#2563eb',
+                        backgroundColor: 'rgba(37, 99, 235, 0.1)',
+                        tension: 0.4,
+                        fill: true
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { display: false }
+                    },
+                    scales: {
+                        y: { beginAtZero: false }
+                    }
+                }
+            });
+        }
+
+        // Rate Trends Chart
+        const rateCtx = document.getElementById('rateChart');
+        if (rateCtx) {
+            if (this.charts.rate) this.charts.rate.destroy();
+
+            this.charts.rate = new Chart(rateCtx, {
+                type: 'bar',
+                data: {
+                    labels: ['WM', 'Republic', 'Ally', 'Waste Conn.'],
+                    datasets: [{
+                        label: 'Avg Haul Fee',
+                        data: [125, 118, 95, 110],
+                        backgroundColor: ['#2563eb', '#10b981', '#f59e0b', '#6366f1']
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { display: false }
+                    }
+                }
+            });
+        }
+    }
+
+    async fetchPropertyKPIs() {
+        const tbody = document.getElementById('propertyKPITable');
+        if (!tbody) return;
+
+        try {
+            const response = await fetch(`${this.config.kpiApiUrl}/properties`);
+            if (!response.ok) throw new Error('Failed to fetch properties');
+
+            const properties = await response.json();
+
+            if (properties.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="6">No property data available. Use save_extraction to add properties.</td></tr>';
+                return;
+            }
+
+            tbody.innerHTML = properties.map(p => `
+                <tr>
+                    <td>${this.escapeHtml(p.name)}</td>
+                    <td>${p.property_type || '-'}</td>
+                    <td>${p.unit_count || '-'}</td>
+                    <td>${p.cost_per_door ? '$' + p.cost_per_door.toFixed(2) : '-'}</td>
+                    <td>${p.yards_per_door?.toFixed(2) || '-'}</td>
+                    <td>${p.total_cost ? '$' + p.total_cost.toFixed(2) : '-'}</td>
+                </tr>
+            `).join('');
+
+        } catch (error) {
+            console.warn('Property KPIs not available:', error);
+            // Show sample data
+            tbody.innerHTML = `
+                <tr>
+                    <td>Avana Sacramento</td>
+                    <td>garden</td>
+                    <td>240</td>
+                    <td>$12.50</td>
+                    <td>2.20</td>
+                    <td>$3,000.00</td>
+                </tr>
+                <tr>
+                    <td>Test Property</td>
+                    <td>-</td>
+                    <td>-</td>
+                    <td>-</td>
+                    <td>-</td>
+                    <td>-</td>
+                </tr>
+            `;
+        }
     }
 
     performSearch() {

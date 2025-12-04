@@ -698,6 +698,32 @@ main {
     }
 }
 
+/* Benchmark Cards */
+.benchmarks-grid {
+    padding: 1rem;
+}
+
+.benchmark-card {
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-radius: 0.5rem;
+    padding: 1rem;
+    text-align: center;
+}
+
+.benchmark-value {
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: var(--primary);
+}
+
+.benchmark-label {
+    font-size: 0.75rem;
+    color: var(--gray);
+    text-transform: uppercase;
+    margin-top: 0.25rem;
+}
+
 /* Utilities */
 .hidden {
     display: none !important;
