@@ -17,10 +17,14 @@ Usage:
 
 import os
 import sys
+import logging
 from pathlib import Path
 from typing import Optional, List, Dict, Any
 from datetime import datetime
 import json
+
+# Configure logging
+logger = logging.getLogger(__name__)
 
 # Add parent to path for imports
 sys.path.insert(0, str(Path(__file__).parent.parent))
@@ -409,7 +413,8 @@ Focus on actionable insights for negotiation or budgeting."""
         try:
             response = self.model.generate_content(prompt)
             return response.text.strip()
-        except Exception:
+        except Exception as e:
+            logger.warning(f"Gemini trend analysis failed, using simple analysis: {e}")
             return self._generate_simple_trend_analysis(trend_data)
 
     def _generate_simple_trend_analysis(self, trend_data: Dict) -> str:

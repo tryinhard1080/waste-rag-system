@@ -18,10 +18,20 @@ Usage:
 
 import sqlite3
 import json
+import logging
 from pathlib import Path
 from datetime import datetime
 from typing import Optional, List, Dict, Any
 from contextlib import contextmanager
+
+# Configure logging
+logger = logging.getLogger(__name__)
+
+# Valid table names for stats queries (prevents SQL injection)
+VALID_TABLES = frozenset([
+    'properties', 'rate_history', 'kpi_history',
+    'hauler_profiles', 'invoices', 'email_index', 'contracts'
+])
 
 # Default database path
 DEFAULT_DB_PATH = Path(__file__).parent.parent / "data" / "wastewise.db"
@@ -56,7 +66,12 @@ class WastewiseDB:
         try:
             yield conn
             conn.commit()
-        except Exception:
+        except sqlite3.Error as e:
+            logger.error(f"Database error: {e}", exc_info=True)
+            conn.rollback()
+            raise
+        except Exception as e:
+            logger.error(f"Unexpected error in database operation: {e}", exc_info=True)
             conn.rollback()
             raise
         finally:
@@ -166,34 +181,33 @@ class WastewiseDB:
         Returns:
             Dict with avg, min, max, count, percentiles
         """
-        conditions = []
+        # Build query with parameterized conditions
+        base_query = """
+            SELECT
+                AVG(rate_value) as avg_rate,
+                MIN(rate_value) as min_rate,
+                MAX(rate_value) as max_rate,
+                COUNT(*) as sample_count
+            FROM rate_history
+            WHERE 1=1
+        """
         params = []
 
         if vendor:
-            conditions.append("vendor = ?")
+            base_query += " AND vendor = ?"
             params.append(vendor)
         if service_type:
-            conditions.append("service_type = ?")
+            base_query += " AND service_type = ?"
             params.append(service_type)
         if rate_type:
-            conditions.append("rate_type = ?")
+            base_query += " AND rate_type = ?"
             params.append(rate_type)
         if region:
-            conditions.append("region = ?")
+            base_query += " AND region = ?"
             params.append(region)
 
-        where_clause = " AND ".join(conditions) if conditions else "1=1"
-
         with self._connect() as conn:
-            row = conn.execute(f"""
-                SELECT
-                    AVG(rate_value) as avg_rate,
-                    MIN(rate_value) as min_rate,
-                    MAX(rate_value) as max_rate,
-                    COUNT(*) as sample_count
-                FROM rate_history
-                WHERE {where_clause}
-            """, params).fetchone()
+            row = conn.execute(base_query, params).fetchone()
 
             return {
                 'avg_rate': round(row['avg_rate'], 2) if row['avg_rate'] else None,
@@ -209,29 +223,30 @@ class WastewiseDB:
         months: int = 12
     ) -> List[Dict]:
         """Get rate trends over time."""
-        conditions = ["vendor = ?"]
+        base_query = """
+            SELECT
+                strftime('%Y-%m', effective_date) as period,
+                service_type,
+                rate_type,
+                AVG(rate_value) as avg_rate
+            FROM rate_history
+            WHERE vendor = ?
+        """
         params = [vendor]
 
         if service_type:
-            conditions.append("service_type = ?")
+            base_query += " AND service_type = ?"
             params.append(service_type)
 
-        where_clause = " AND ".join(conditions)
+        base_query += """
+            GROUP BY period, service_type, rate_type
+            ORDER BY period DESC
+            LIMIT ?
+        """
+        params.append(months)
 
         with self._connect() as conn:
-            rows = conn.execute(f"""
-                SELECT
-                    strftime('%Y-%m', effective_date) as period,
-                    service_type,
-                    rate_type,
-                    AVG(rate_value) as avg_rate
-                FROM rate_history
-                WHERE {where_clause}
-                GROUP BY period, service_type, rate_type
-                ORDER BY period DESC
-                LIMIT ?
-            """, params + [months]).fetchall()
-
+            rows = conn.execute(base_query, params).fetchall()
             return [dict(row) for row in rows]
 
     # ==================== KPI History ====================
@@ -429,14 +444,22 @@ class WastewiseDB:
         with self._connect() as conn:
             stats = {}
 
-            tables = ['properties', 'rate_history', 'kpi_history', 'hauler_profiles', 'invoices', 'email_index']
-            for table in tables:
-                row = conn.execute(f"SELECT COUNT(*) as count FROM {table}").fetchone()
-                stats[table] = row['count']
+            # Only query tables in the validated whitelist
+            for table in VALID_TABLES:
+                try:
+                    # Table name is validated against VALID_TABLES constant
+                    row = conn.execute(f"SELECT COUNT(*) as count FROM {table}").fetchone()
+                    stats[table] = row['count'] if row else 0
+                except sqlite3.OperationalError:
+                    # Table may not exist yet
+                    stats[table] = 0
 
             # Schema version
-            row = conn.execute("SELECT value FROM _metadata WHERE key = 'schema_version'").fetchone()
-            stats['schema_version'] = row['value'] if row else 'unknown'
+            try:
+                row = conn.execute("SELECT value FROM _metadata WHERE key = 'schema_version'").fetchone()
+                stats['schema_version'] = row['value'] if row else 'unknown'
+            except sqlite3.OperationalError:
+                stats['schema_version'] = 'unknown'
 
             return stats
 

@@ -13,23 +13,37 @@ Usage:
     Then access at: http://localhost:5000
 """
 
-from flask import Flask, request, jsonify
-from flask_cors import CORS
 import os
 import sys
+import logging
 from pathlib import Path
+from flask import Flask, request, jsonify
+from flask_cors import CORS
+
+# Configure logging
+logging.basicConfig(
+    level=logging.INFO,
+    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
+)
+logger = logging.getLogger(__name__)
 
 # Add parent directory to path for imports
 sys.path.insert(0, str(Path(__file__).parent.parent / 'scripts'))
 
 from semantic_rag import SemanticRAGManager
 
+# Constants
+MAX_QUERY_LENGTH = 2000
+MAX_CHUNKS = 50
+ALLOWED_ORIGINS = os.environ.get('ALLOWED_ORIGINS', 'http://localhost:8000,http://localhost:3000,http://127.0.0.1:8000').split(',')
+
 app = Flask(__name__)
-CORS(app)  # Enable CORS for dashboard access
+CORS(app, resources={r"/api/*": {"origins": ALLOWED_ORIGINS}})
 
 # Initialize RAG manager
 API_KEY = os.environ.get('GOOGLE_API_KEY')
 if not API_KEY:
+    logger.error("GOOGLE_API_KEY environment variable not set")
     print("ERROR: GOOGLE_API_KEY environment variable not set")
     print("Set it with: set GOOGLE_API_KEY=your_key")
     sys.exit(1)
@@ -37,17 +51,37 @@ if not API_KEY:
 rag_manager = SemanticRAGManager(API_KEY)
 
 
+def sanitize_string(value: str, max_length: int = MAX_QUERY_LENGTH) -> str:
+    """Sanitize string input."""
+    if not value or not isinstance(value, str):
+        return None
+    return value.strip()[:max_length]
+
+
+def validate_positive_int(value, default: int, max_val: int) -> int:
+    """Validate and convert to positive integer."""
+    try:
+        result = int(value)
+        return min(max(1, result), max_val)
+    except (TypeError, ValueError):
+        return default
+
+
 @app.route('/api/health', methods=['GET'])
 def health_check():
     """Health check endpoint"""
-    embeddings_count = len(rag_manager.embeddings_cache.get('chunks', {}))
-    return jsonify({
-        'status': 'ok',
-        'service': 'WASTE Master Brain Semantic RAG',
-        'version': '2.0.0',
-        'search_type': 'semantic' if embeddings_count > 0 else 'keyword',
-        'embeddings_cached': embeddings_count
-    })
+    try:
+        embeddings_count = len(rag_manager.embeddings_cache.get('chunks', {}))
+        return jsonify({
+            'status': 'ok',
+            'service': 'WASTE Master Brain Semantic RAG',
+            'version': '2.1.0',
+            'search_type': 'semantic' if embeddings_count > 0 else 'keyword',
+            'embeddings_cached': embeddings_count
+        })
+    except Exception as e:
+        logger.error(f"Health check error: {e}", exc_info=True)
+        return jsonify({'status': 'error', 'error': 'Health check failed'}), 500
 
 
 @app.route('/api/query', methods=['POST'])
@@ -75,19 +109,30 @@ def query_rag():
     try:
         data = request.get_json()
 
-        if not data or 'question' not in data:
+        if not data:
+            return jsonify({
+                'status': 'error',
+                'error': 'Request body is required'
+            }), 400
+
+        if 'question' not in data:
             return jsonify({
                 'status': 'error',
                 'error': 'Missing required field: question'
             }), 400
 
-        question = data['question']
-        max_results = data.get('max_chunks', 5)
-        keyword_only = data.get('keyword_only', False)
+        question = sanitize_string(data['question'])
+        if not question:
+            return jsonify({
+                'status': 'error',
+                'error': 'Question cannot be empty'
+            }), 400
+
+        max_results = validate_positive_int(data.get('max_chunks'), default=5, max_val=MAX_CHUNKS)
+        keyword_only = bool(data.get('keyword_only', False))
 
         # Query the RAG system
-        print(f"Processing query: {question}")
-        print(f"  Mode: {'keyword' if keyword_only else 'semantic'}")
+        logger.info(f"Processing query: {question[:50]}... (mode: {'keyword' if keyword_only else 'semantic'})")
 
         result = rag_manager.query(
             question,
@@ -105,12 +150,10 @@ def query_rag():
         })
 
     except Exception as e:
-        print(f"Error processing query: {str(e)}")
-        import traceback
-        traceback.print_exc()
+        logger.error(f"Error processing query: {e}", exc_info=True)
         return jsonify({
             'status': 'error',
-            'error': str(e)
+            'error': 'Internal server error'
         }), 500
 
 
@@ -145,9 +188,10 @@ def get_stats():
         })
 
     except Exception as e:
+        logger.error(f"Error getting stats: {e}", exc_info=True)
         return jsonify({
             'status': 'error',
-            'error': str(e)
+            'error': 'Internal server error'
         }), 500
 
 
@@ -170,9 +214,9 @@ def build_embeddings():
     """
     try:
         data = request.get_json() or {}
-        force = data.get('force', False)
+        force = bool(data.get('force', False))
 
-        print(f"Building embeddings (force={force})...")
+        logger.info(f"Building embeddings (force={force})...")
         rag_manager.build_embeddings(force_rebuild=force)
 
         embeddings_count = len(rag_manager.embeddings_cache.get('chunks', {}))
@@ -184,10 +228,10 @@ def build_embeddings():
         })
 
     except Exception as e:
-        print(f"Error building embeddings: {str(e)}")
+        logger.error(f"Error building embeddings: {e}", exc_info=True)
         return jsonify({
             'status': 'error',
-            'error': str(e)
+            'error': 'Internal server error'
         }), 500
 
 
@@ -224,14 +268,16 @@ def get_example_queries():
 
 
 if __name__ == '__main__':
+    port = int(os.environ.get('SEMANTIC_API_PORT', 5000))
+    debug = os.environ.get('FLASK_DEBUG', 'false').lower() == 'true'
     embeddings_count = len(rag_manager.embeddings_cache.get('chunks', {}))
 
     print("=" * 80)
     print("WASTE Master Brain - Semantic RAG API")
     print("=" * 80)
-    print(f"Starting Flask server on http://localhost:5000")
-    print(f"API Key: {'Set' if API_KEY else 'Not Set'}")
-    print(f"CORS: Enabled for all origins")
+    logger.info(f"Starting Flask server on http://localhost:{port}")
+    logger.info(f"Debug mode: {debug}")
+    logger.info(f"CORS allowed origins: {ALLOWED_ORIGINS}")
     print(f"Search Mode: {'SEMANTIC' if embeddings_count > 0 else 'KEYWORD (run --build-embeddings first)'}")
     print(f"Embeddings Cached: {embeddings_count}")
     print("")
@@ -251,4 +297,4 @@ if __name__ == '__main__':
     print("=" * 80)
 
     # Run Flask app
-    app.run(host='0.0.0.0', port=5000, debug=True)
+    app.run(host='0.0.0.0', port=port, debug=debug)

@@ -29,9 +29,20 @@ import sys
 import os
 import json
 import sqlite3
+import logging
+import re
 from pathlib import Path
 from typing import Any, Dict, List, Optional
 import subprocess
+
+# Configure logging
+logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')
+logger = logging.getLogger(__name__)
+
+# Constants
+MAX_QUERY_LENGTH = 1000
+MAX_RESULTS_LIMIT = 50
+VALID_TABLES = frozenset(['properties', 'rate_history', 'kpi_history', 'invoices', 'contracts', 'hauler_profiles'])
 
 # Add parent directories to path
 SCRIPT_DIR = Path(__file__).parent
@@ -83,47 +94,50 @@ class WasteMasterBrainServer:
         region: str = None
     ) -> Dict:
         """Query historical rate data with benchmarks."""
-        conditions = []
+        # Build query with parameterized conditions
+        stats_query = """
+            SELECT
+                AVG(rate_value) as avg_rate,
+                MIN(rate_value) as min_rate,
+                MAX(rate_value) as max_rate,
+                COUNT(*) as sample_count
+            FROM rate_history
+            WHERE 1=1
+        """
+        trends_query = """
+            SELECT
+                strftime('%Y-%m', effective_date) as period,
+                AVG(rate_value) as avg_rate
+            FROM rate_history
+            WHERE 1=1
+        """
         params = []
 
         if vendor:
-            conditions.append("vendor = ?")
+            stats_query += " AND vendor = ?"
+            trends_query += " AND vendor = ?"
             params.append(vendor)
         if service_type:
-            conditions.append("service_type = ?")
+            stats_query += " AND service_type = ?"
+            trends_query += " AND service_type = ?"
             params.append(service_type)
         if rate_type:
-            conditions.append("rate_type = ?")
+            stats_query += " AND rate_type = ?"
+            trends_query += " AND rate_type = ?"
             params.append(rate_type)
         if region:
-            conditions.append("region = ?")
+            stats_query += " AND region = ?"
+            trends_query += " AND region = ?"
             params.append(region)
 
-        where_clause = f"WHERE {' AND '.join(conditions)}" if conditions else ""
+        trends_query += " GROUP BY period ORDER BY period DESC LIMIT 6"
 
         with self._get_connection() as conn:
             # Get statistics
-            stats = conn.execute(f"""
-                SELECT
-                    AVG(rate_value) as avg_rate,
-                    MIN(rate_value) as min_rate,
-                    MAX(rate_value) as max_rate,
-                    COUNT(*) as sample_count
-                FROM rate_history
-                {where_clause}
-            """, params).fetchone()
+            stats = conn.execute(stats_query, params).fetchone()
 
-            # Get recent trends
-            trends = conn.execute(f"""
-                SELECT
-                    strftime('%Y-%m', effective_date) as period,
-                    AVG(rate_value) as avg_rate
-                FROM rate_history
-                {where_clause}
-                GROUP BY period
-                ORDER BY period DESC
-                LIMIT 6
-            """, params).fetchall()
+            # Get recent trends (params used twice for both queries)
+            trends = conn.execute(trends_query, params).fetchall()
 
         avg_rate = stats['avg_rate']
         min_rate = stats['min_rate']
@@ -149,9 +163,25 @@ class WasteMasterBrainServer:
 
     def search_emails(self, query: str, max_results: int = 5) -> Dict:
         """Semantic search over email knowledge base."""
+        # Input validation
+        if not query or not isinstance(query, str):
+            return {'query': query, 'error': 'Query must be a non-empty string', 'results': []}
+
+        # Sanitize query - limit length and remove potentially dangerous characters
+        query = query[:MAX_QUERY_LENGTH].strip()
+        if not query:
+            return {'query': query, 'error': 'Query is empty after sanitization', 'results': []}
+
+        # Validate max_results
+        max_results = min(max(1, int(max_results)), MAX_RESULTS_LIMIT)
+
         script_path = PROJECT_ROOT / "scripts" / "semantic_rag.py"
+        if not script_path.exists():
+            logger.error(f"Script not found: {script_path}")
+            return {'query': query, 'error': 'Search script not found', 'results': []}
 
         try:
+            logger.info(f"Executing email search: query='{query[:50]}...', max_results={max_results}")
             result = subprocess.run(
                 [sys.executable, str(script_path), "--query", query, "--max-results", str(max_results)],
                 capture_output=True,
@@ -439,10 +469,14 @@ class WasteMasterBrainServer:
         """Get database statistics."""
         with self._get_connection() as conn:
             stats = {}
-            tables = ['properties', 'rate_history', 'kpi_history', 'invoices', 'contracts', 'hauler_profiles']
-            for table in tables:
-                row = conn.execute(f"SELECT COUNT(*) as count FROM {table}").fetchone()
-                stats[table] = row['count']
+            # Only query tables in the validated whitelist
+            for table in VALID_TABLES:
+                try:
+                    # Table name is validated against VALID_TABLES constant
+                    row = conn.execute(f"SELECT COUNT(*) as count FROM {table}").fetchone()
+                    stats[table] = row['count'] if row else 0
+                except sqlite3.OperationalError:
+                    stats[table] = 0
         return stats
 
 
