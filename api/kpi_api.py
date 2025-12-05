@@ -56,7 +56,8 @@ def sanitize_string(value: str, max_length: int = 200) -> str:
     """Sanitize string input."""
     if not value or not isinstance(value, str):
         return None
-    return value.strip()[:max_length]
+    result = value.strip()[:max_length]
+    return result if result else None
 
 
 def validate_positive_int(value: str, default: int, max_val: int = MAX_LIMIT) -> int:
@@ -179,9 +180,9 @@ def get_rate_trends(vendor):
 def compare_rate():
     """Compare a rate against benchmarks."""
     try:
-        data = request.get_json()
+        data = request.get_json(silent=True)
         if not data:
-            return jsonify({'error': 'Request body is required'}), 400
+            return jsonify({'error': 'Request body is required (Content-Type: application/json)'}), 400
 
         # Validate required fields
         required = ['rate_value', 'vendor', 'service_type', 'rate_type']
